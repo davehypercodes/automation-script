@@ -134,7 +134,7 @@ for link in links:
                 break
         
         # Interact with the tweet
-        command_options = [like, quote, comment, repost]
+        command_options = [like, comment, repost]
         for _ in range(4):
             random_command = random.choice(command_options)
             command_options.remove(random_command)
