@@ -80,7 +80,7 @@ with open('interacted_tweets.txt', 'a') as file:
     pass
 
 options = Options()
-options.profile = "/home/dave/.mozilla/firefox/68pj9xf2.default-release"  # Replace with your actual profile path
+options.profile = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540"  # Replace with your actual profile path
 driver = webdriver.Firefox(options=options)
 
 # Go to the WhatsApp web client
@@ -107,7 +107,7 @@ for message in messages:
     links = list(dict.fromkeys(links))
 
 # Get links from last session
-needed_links = links[-52:]
+needed_links = links[-19:]
 links = needed_links
 
 for link in links:
@@ -134,7 +134,7 @@ for link in links:
                 break
         
         # Interact with the tweet
-        command_options = [like, comment, repost]
+        command_options = [like, comment, quote, repost]
         for _ in range(4):
             random_command = random.choice(command_options)
             command_options.remove(random_command)
