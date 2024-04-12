@@ -88,7 +88,7 @@ driver.get("https://web.whatsapp.com/")
 input("Press enter after scanning QR code.....")
 
 # Open the group chat (replace 'Group Chat Name' with the name of your group chat)
-group_chat = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='$BLOCK Farming 🧑‍🌾']")))
+group_chat = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='Farming for Quote']")))
 group_chat.click()
 
 # Wait for the chat to load
@@ -107,7 +107,7 @@ for message in messages:
     links = list(dict.fromkeys(links))
 
 # Get links from last session
-needed_links = links[-19:]
+needed_links = links[-10:]
 links = needed_links
 
 for link in links:
