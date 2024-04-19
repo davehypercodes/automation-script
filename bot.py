@@ -11,8 +11,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540" #Edit as needed
-SESSION_LINK_COUNT = 21 #Edit as needed
 TWITTER_USERNAME = "adesanyadavidj" #Edit as needed
+SESSION_LINK_COUNT = 21 #Edit as needed
 SLEEP_TIME = 10
 SHORT_SLEEP_TIME = 5
 TIMEOUT = 30
