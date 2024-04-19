@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540" #Edit as needed
-SESSION_LINK_COUNT = 0 #Edit as needed
+SESSION_LINK_COUNT = 21 #Edit as needed
 TWITTER_USERNAME = "adesanyadavidj" #Edit as needed
 SLEEP_TIME = 10
 SHORT_SLEEP_TIME = 5
@@ -34,7 +34,7 @@ class WhatsTweetBot:
     def open_whatsapp(self):
         self.driver.get(WHATSAPP_LINK)
         input("Press Enter after chats are fully synced: ")
-        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='Farming for Quote']")))
+        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='$💰💰💰💰💰Farming 🧑‍🌾']")))
         group_chat.click()
 
     def get_messages(self):
