@@ -92,17 +92,17 @@ class WhatsTweetBot:
         model = GPT2LMHeadModel.from_pretrained("gpt2")
 
         inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
-        reply_length = 100  # you can adjust this as needed
+        reply_length = 30 # you can adjust this as needed
 
         with torch.no_grad():
             reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id)
 
         return tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
 
-    def comment(self):
+    def comment(self, username):
         tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
         for tweet in tweets:
-            if TWITTER_USERNAME in tweet.text:
+            if username in tweet.text:
                 tweet_text = tweet.text 
                 break 
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
@@ -131,15 +131,21 @@ class WhatsTweetBot:
                 #     if target_username in tweet_text:
                 #         index = tweets.index(tweet)
                 #         break
-
+                target_username = self.extract_username(link)
+                
                 commands = [self.like_tweet, self.retweet, self.comment]
                 self.driver.get(link)
                 time.sleep(SLEEP_TIME)
                 for _ in range(3):
                     command = random.choice(commands)
-                    command()
-                    commands.remove(command)
-                    time.sleep(SHORT_SLEEP_TIME)
+                    if command  == self.comment:
+                        command(target_username)
+                        commands.remove(command)
+                        time.sleep(SHORT_SLEEP_TIME)
+                    else:
+                        command()
+                        commands.remove(command)
+                        time.sleep(SHORT_SLEEP_TIME)
                 self.mark_as_interacted_with(tweet_id)
             except Exception as e:
                 print(e)
