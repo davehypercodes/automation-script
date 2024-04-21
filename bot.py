@@ -1,5 +1,6 @@
 import re
 import time
+import torch
 import random
 from comments import comments
 from selenium import webdriver
@@ -8,6 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
 
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540" #Edit as needed
@@ -34,7 +37,7 @@ class WhatsTweetBot:
     def open_whatsapp(self):
         self.driver.get(WHATSAPP_LINK)
         input("Press Enter after chats are fully synced: ")
-        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='$💰💰💰💰💰Farming 🧑‍🌾']")))
+        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='Farming for Quote']")))
         group_chat.click()
 
     def get_messages(self):
@@ -67,7 +70,6 @@ class WhatsTweetBot:
             return parts[1]
         return None
 
-
     def like_tweet(self):
         like_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='like']")))
         like_buttons[0].click()
@@ -78,10 +80,35 @@ class WhatsTweetBot:
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
 
+    # def comment(self):
+    #     comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
+    #     comment_box.click()
+    #     comment_box.send_keys(random.choice(comments))
+    #     post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
+    #     post_button.click()
+
+    def generate_reply(self, user_input):
+        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+        inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
+        reply_length = 100  # you can adjust this as needed
+
+        with torch.no_grad():
+            reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id)
+
+        return tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
+
     def comment(self):
+        tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
+        for tweet in tweets:
+            if TWITTER_USERNAME in tweet.text:
+                tweet_text = tweet.text 
+                break 
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
         comment_box.click()
-        comment_box.send_keys(random.choice(comments))
+        reply = self.generate_reply(tweet_text)
+        comment_box.send_keys(reply)
         post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
         post_button.click()
 
@@ -114,6 +141,7 @@ class WhatsTweetBot:
                     commands.remove(command)
                     time.sleep(SHORT_SLEEP_TIME)
                 self.mark_as_interacted_with(tweet_id)
-            except:
+            except Exception as e:
+                print(e)
                 print(f"{self.count}: Error engaging {link}. Skipping...")
                 print("===============================================")
