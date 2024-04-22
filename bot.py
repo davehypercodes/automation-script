@@ -87,7 +87,7 @@ class WhatsTweetBot:
     #     post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
     #     post_button.click()
 
-    def generate_reply(self, user_input):
+    def generate_reply(self, user_input, temperature=1.0):
         tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
         model = GPT2LMHeadModel.from_pretrained("gpt2")
 
@@ -95,7 +95,7 @@ class WhatsTweetBot:
         reply_length = 30 # you can adjust this as needed
 
         with torch.no_grad():
-            reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id)
+            reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id, temperature=temperature)
 
         return tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
 
