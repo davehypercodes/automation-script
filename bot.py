@@ -100,7 +100,7 @@ class WhatsTweetBot:
             print("Tweet has already been liked!!")
             return
         like_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='like']")))
-        like_buttons[0].click()
+        like_buttons[index].click()
         with open('liked.txt', 'a') as file:
             file.write(tweet_id + '\n')
 
