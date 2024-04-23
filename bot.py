@@ -17,11 +17,12 @@ logging.set_verbosity_error()
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540"
 TWITTER_USERNAME = "adesanyadavidj"
-SESSION_LINK_COUNT = 21
+SESSION_LINK_COUNT = 10
 SLEEP_TIME = 10
 LONG_SLEEP_TIME = 15
 SHORT_SLEEP_TIME = 5
 TIMEOUT = 30
+TICKERS = "$BEYOND, $BUBBLE, $DROIDS, $PARAM"
 
 class WhatsTweetBot:
     def __init__(self):
@@ -58,7 +59,7 @@ class WhatsTweetBot:
             urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message.text)
             self.twitter_links = [link for link in urls if "twitter.com" in link or "x.com" in link]
             self.twitter_links = list(dict.fromkeys(self.twitter_links))
-            self.twitter_links = self.twitter_links[-SESSION_LINK_COUNT:]
+            self.twitter_links = self.twitter_links[:SESSION_LINK_COUNT]
     
     def get_tweet_id_from_url(self, link):
         return link.split("/")[-1]
@@ -114,8 +115,8 @@ class WhatsTweetBot:
         with open('reposted.txt', 'a') as file:
             file.write(tweet_id + '\n')
 
-    def generate_reply(self, user_input, temperature=1.0):
-        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
+    def generate_reply(self, user_input, temperature=0.5):
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium", padding_side="left")
         model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
 
         inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
@@ -126,8 +127,7 @@ class WhatsTweetBot:
 
         reply_text = tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
 
-        tickers = "$BEYOND, $BUBBLE, $DROIDS, $PARAM"
-        reply_text = f"{reply_text}\n\n{tickers}"
+        reply_text = f"{reply_text}\n\n{TICKERS}"
 
         return reply_text
     
@@ -152,7 +152,7 @@ class WhatsTweetBot:
     def get_tweet_text(self, username):
         tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
         for tweet in tweets:
-            if f"@{username}" in tweet.text.lower():
+            if f"@{username}".lower() in tweet.text.lower():
                 tweet_text = tweet.text
                 return self.remove_lines(tweet_text)
 
