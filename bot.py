@@ -124,7 +124,12 @@ class WhatsTweetBot:
         with torch.no_grad():
             reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=True)
 
-        return tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
+        reply_text = tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
+
+        tickers = "$BEYOND, $BUBBLE, $DROIDS, $PARAM"
+        reply_text = f"{reply_text}\n\n{tickers}"
+
+        return reply_text
     
     def remove_lines(self, tweet_text):
         lines = tweet_text.split('\n')
