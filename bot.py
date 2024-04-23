@@ -71,13 +71,13 @@ class WhatsTweetBot:
             return parts[1]
         return None
 
-    def like_tweet(self, index):
+    def like_tweet(self):
         like_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='like']")))
-        like_buttons[index].click()
+        like_buttons[0].click()
 
-    def retweet(self, index):
+    def retweet(self):
         retweet_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='retweet']")))
-        retweet_buttons[index].click()
+        retweet_buttons[0].click()
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
 
@@ -101,7 +101,6 @@ class WhatsTweetBot:
     def comment(self, tweet_text):
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
         comment_box.click()
-        # temperature = random.uniform(0.7, 1.3)  generate a random temperature value between 0.7 and 1.3
         reply = self.generate_reply(tweet_text)
         comment_box.send_keys(reply)
         post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
@@ -146,7 +145,7 @@ class WhatsTweetBot:
                     if command == self.comment:
                         command(tweet_text)
                     else:
-                        command(index)
+                        command()
                     time.sleep(SHORT_SLEEP_TIME)
 
                 self.mark_as_interacted_with(tweet_id)
