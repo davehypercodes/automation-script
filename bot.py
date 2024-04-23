@@ -111,8 +111,7 @@ class WhatsTweetBot:
         for tweet in tweets:
             if username in tweet.text:
                 tweet_text = tweet.text
-                index = tweets.index(tweet)
-                return self.remove_lines(tweet_text), index
+                return self.remove_lines(tweet_text)
                         
     def engage_tweets(self):
         print("Engaging tweets...")
@@ -136,7 +135,7 @@ class WhatsTweetBot:
                 print("===============================================")
                 self.driver.get(link)
                 time.sleep(LONG_SLEEP_TIME)
-                tweet_text, index = self.get_tweet_text(target_username)
+                tweet_text = self.get_tweet_text(target_username)
 
                 commands = [self.like_tweet, self.retweet, self.comment]
                 random.shuffle(commands)
