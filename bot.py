@@ -17,6 +17,7 @@ PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-17128329705
 TWITTER_USERNAME = "adesanyadavidj"
 SESSION_LINK_COUNT = 21
 SLEEP_TIME = 10
+LONG_SLEEP_TIME = 15
 SHORT_SLEEP_TIME = 5
 TIMEOUT = 30
 
@@ -100,8 +101,8 @@ class WhatsTweetBot:
     def comment(self, tweet_text):
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
         comment_box.click()
-        temperature = random.uniform(0.7, 1.3)  # generate a random temperature value between 0.7 and 1.3
-        reply = self.generate_reply(tweet_text, temperature)
+        # temperature = random.uniform(0.7, 1.3)  generate a random temperature value between 0.7 and 1.3
+        reply = self.generate_reply(tweet_text)
         comment_box.send_keys(reply)
         post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
         post_button.click()
@@ -135,7 +136,7 @@ class WhatsTweetBot:
                 print(f"{self.count}: Engaging {link}...")
                 print("===============================================")
                 self.driver.get(link)
-                time.sleep(SLEEP_TIME)
+                time.sleep(LONG_SLEEP_TIME)
                 tweet_text, index = self.get_tweet_text(target_username)
 
                 commands = [self.like_tweet, self.retweet, self.comment]
