@@ -127,7 +127,7 @@ class WhatsTweetBot:
 
         text = tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
 
-        reply_text = text + '\n ' + TICKERS
+        reply_text = text + ' ' + TICKERS
 
         return reply_text
     
