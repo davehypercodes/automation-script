@@ -70,13 +70,13 @@ class WhatsTweetBot:
             return parts[1]
         return None
 
-    def like_tweet(self):
+    def like_tweet(self, index):
         like_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='like']")))
-        like_buttons[0].click()
+        like_buttons[index].click()
 
-    def retweet(self):
+    def retweet(self, index):
         retweet_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='retweet']")))
-        retweet_buttons[0].click()
+        retweet_buttons[index].click()
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
 
@@ -114,7 +114,6 @@ class WhatsTweetBot:
                 index = tweets.index(tweet)
                 return self.remove_lines(tweet_text), index
                         
-
     def engage_tweets(self):
         print("Engaging tweets...")
         print("===============================================")
@@ -123,7 +122,7 @@ class WhatsTweetBot:
             try:
                 target_username = self.extract_username(link)
                 tweet_id = self.get_tweet_id_from_url(link)
-                
+
                 if self.has_been_interacted_with(tweet_id):
                     print(f"{self.count}: Tweet {link} has already been engaged!!")
                     print("===============================================")
@@ -134,21 +133,21 @@ class WhatsTweetBot:
                     continue
 
                 print(f"{self.count}: Engaging {link}...")
+                print("===============================================")
                 self.driver.get(link)
                 time.sleep(SLEEP_TIME)
                 tweet_text, index = self.get_tweet_text(target_username)
-                
+
                 commands = [self.like_tweet, self.retweet, self.comment]
-                for _ in range(3):
-                    command = random.choice(commands)
-                    if command  == self.comment:
-                        command(target_username)
-                        commands.remove(command)
-                        time.sleep(SHORT_SLEEP_TIME)
+                random.shuffle(commands)
+
+                for command in commands:
+                    if command == self.comment:
+                        command(tweet_text)
                     else:
-                        command()
-                        commands.remove(command)
-                        time.sleep(SHORT_SLEEP_TIME)
+                        command(index)
+                    time.sleep(SHORT_SLEEP_TIME)
+
                 self.mark_as_interacted_with(tweet_id)
             except Exception as e:
                 print(e)
