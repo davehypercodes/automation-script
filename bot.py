@@ -31,6 +31,12 @@ class WhatsTweetBot:
         self.count = 0
         with open("interacted_tweets.txt", "a") as file:
             pass
+        with open("liked.txt", "a") as file:
+            pass
+        with open("commented.txt", "a") as file:
+            pass
+        with open("reposted.txt", "a") as file:
+            pass
         
     def open_browser(self):
         options = Options()
@@ -62,6 +68,21 @@ class WhatsTweetBot:
             interacted_tweets = file.read().splitlines()
         return tweet_id in interacted_tweets
     
+    def has_been_liked(self, tweet_id):
+        with open('liked.txt', 'r') as file:
+            liked_tweets = file.read().splitlines()
+        return tweet_id in liked_tweets
+    
+    def has_been_commented(self, tweet_id):
+        with open('commented.txt', 'r') as file:
+            commented_tweets = file.read().splitlines()
+        return tweet_id in commented_tweets
+    
+    def has_been_reposted(self, tweet_id):
+        with open('reposted.txt', 'r') as file:
+            reposted_tweets = file.read().splitlines()
+        return tweet_id in reposted_tweets
+    
     def mark_as_interacted_with(self, tweet_id):
         with open('interacted_tweets.txt', 'a') as file:
             file.write(tweet_id + '\n')
@@ -73,18 +94,28 @@ class WhatsTweetBot:
             return parts[1]
         return None
 
-    def like_tweet(self):
+    def like_tweet(self, tweet_id):
+        if self.has_been_liked(tweet_id):
+            print("Tweet has already been liked!!")
+            return
         like_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='like']")))
         like_buttons[0].click()
+        with open('liked.txt', 'a') as file:
+            file.write(tweet_id + '\n')
 
-    def retweet(self):
+    def retweet(self, tweet_id):
+        if self.has_been_reposted(tweet_id):
+            print("Tweet has already been reposted!!")
+            return
         retweet_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='retweet']")))
         retweet_buttons[0].click()
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
+        with open('reposted.txt', 'a') as file:
+            file.write(tweet_id + '\n')
 
     def generate_reply(self, user_input, temperature=1.0):
-        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium", padding_side="left")
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
         model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
 
         inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
@@ -100,21 +131,26 @@ class WhatsTweetBot:
         lines = lines[2:-7]
         return '\n'.join(lines)
 
-    def comment(self, tweet_text):
+    def comment(self, tweet_text, tweet_id):
+        if self.has_been_commented(tweet_id):
+            print("Tweet has already been commented!!")
+            return
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
         comment_box.click()
         reply = self.generate_reply(tweet_text)
         comment_box.send_keys(reply)
         post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
         post_button.click()
+        with open('commented.txt', 'a') as file:
+            file.write(tweet_id + '\n')
 
     def get_tweet_text(self, username):
         tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
         for tweet in tweets:
-            if username in tweet.text:
+            if f"@{username}" in tweet.text.lower():
                 tweet_text = tweet.text
                 return self.remove_lines(tweet_text)
-                        
+
     def engage_tweets(self):
         print("Engaging tweets...")
         print("===============================================")
@@ -144,9 +180,9 @@ class WhatsTweetBot:
 
                 for command in commands:
                     if command == self.comment:
-                        command(tweet_text)
+                        command(tweet_text, tweet_id)
                     else:
-                        command()
+                        command(tweet_id)
                     time.sleep(SHORT_SLEEP_TIME)
 
                 self.mark_as_interacted_with(tweet_id)
