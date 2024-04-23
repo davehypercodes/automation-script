@@ -9,13 +9,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 WHATSAPP_LINK = "https://web.whatsapp.com"
-PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540" #Edit as needed
-TWITTER_USERNAME = "adesanyadavidj" #Edit as needed
-SESSION_LINK_COUNT = 21 #Edit as needed
+PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540"
+TWITTER_USERNAME = "adesanyadavidj"
+SESSION_LINK_COUNT = 21
 SLEEP_TIME = 10
 SHORT_SLEEP_TIME = 5
 TIMEOUT = 30
@@ -37,7 +37,7 @@ class WhatsTweetBot:
     def open_whatsapp(self):
         self.driver.get(WHATSAPP_LINK)
         input("Press Enter after chats are fully synced: ")
-        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='Farming for Quote']")))
+        group_chat = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, f"//span[@title='$BLOCK FARMING']")))
         group_chat.click()
 
     def get_messages(self):
@@ -80,62 +80,65 @@ class WhatsTweetBot:
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
 
-    # def comment(self):
-    #     comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
-    #     comment_box.click()
-    #     comment_box.send_keys(random.choice(comments))
-    #     post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
-    #     post_button.click()
-
     def generate_reply(self, user_input, temperature=1.0):
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        model = GPT2LMHeadModel.from_pretrained("gpt2")
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium", padding_side="left")
+        model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
 
         inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors='pt')
-        reply_length = 30 # you can adjust this as needed
+        reply_length = 30
 
         with torch.no_grad():
-            reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id, temperature=temperature)
+            reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=True)
 
         return tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
+    
+    def remove_lines(self, tweet_text):
+        lines = tweet_text.split('\n')
+        lines = lines[2:-7]
+        return '\n'.join(lines)
 
-    def comment(self, username):
-        tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
-        for tweet in tweets:
-            if username in tweet.text:
-                tweet_text = tweet.text 
-                break 
+    def comment(self, tweet_text):
         comment_box = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']")))
         comment_box.click()
-        reply = self.generate_reply(tweet_text)
+        temperature = random.uniform(0.7, 1.3)  # generate a random temperature value between 0.7 and 1.3
+        reply = self.generate_reply(tweet_text, temperature)
         comment_box.send_keys(reply)
         post_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetButtonInline']")))
         post_button.click()
 
+    def get_tweet_text(self, username):
+        tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
+        for tweet in tweets:
+            if username in tweet.text:
+                tweet_text = tweet.text
+                index = tweets.index(tweet)
+                return self.remove_lines(tweet_text), index
+                        
+
     def engage_tweets(self):
         print("Engaging tweets...")
+        print("===============================================")
         for link in self.twitter_links:
             self.count += 1
             try:
+                target_username = self.extract_username(link)
                 tweet_id = self.get_tweet_id_from_url(link)
-                if self.has_been_interacted_with(tweet_id) or self.extract_username(link) == TWITTER_USERNAME:
-                    print(f"{self.count}: Tweet {link} has already been interacted with or it is a personal tweet. Skipping...")
+                
+                if self.has_been_interacted_with(tweet_id):
+                    print(f"{self.count}: Tweet {link} has already been engaged!!")
+                    print("===============================================")
+                    continue
+                elif target_username == TWITTER_USERNAME:
+                    print(f"{self.count}: Tweet {link} belongs to the bot!!")
                     print("===============================================")
                     continue
 
-                # # Find the specific tweet and interact with it
-                # tweets = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//article[@data-testid='tweet']")))
-                # for tweet in tweets:
-                #     tweet_text = tweet.text
-                #     # Check if the username is in the tweet text
-                #     if target_username in tweet_text:
-                #         index = tweets.index(tweet)
-                #         break
-                target_username = self.extract_username(link)
-                
-                commands = [self.like_tweet, self.retweet, self.comment]
+                print(f"{self.count}: Engaging {link}...")
                 self.driver.get(link)
                 time.sleep(SLEEP_TIME)
+                tweet_text, index = self.get_tweet_text(target_username)
+                
+                commands = [self.like_tweet, self.retweet, self.comment]
                 for _ in range(3):
                     command = random.choice(commands)
                     if command  == self.comment:
