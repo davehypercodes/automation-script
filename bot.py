@@ -17,7 +17,7 @@ logging.set_verbosity_error()
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540"
 TWITTER_USERNAME = "adesanyadavidj"
-SESSION_LINK_COUNT = 10
+SESSION_LINK_COUNT = 21
 SLEEP_TIME = 10
 LONG_SLEEP_TIME = 15
 SHORT_SLEEP_TIME = 5
@@ -59,7 +59,7 @@ class WhatsTweetBot:
             urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message.text)
             self.twitter_links = [link for link in urls if "twitter.com" in link or "x.com" in link]
             self.twitter_links = list(dict.fromkeys(self.twitter_links))
-            self.twitter_links = self.twitter_links[:SESSION_LINK_COUNT]
+            self.twitter_links = self.twitter_links[-SESSION_LINK_COUNT:]
     
     def get_tweet_id_from_url(self, link):
         return link.split("/")[-1]
@@ -125,9 +125,9 @@ class WhatsTweetBot:
         with torch.no_grad():
             reply = model.generate(inputs, max_length=inputs.shape[-1] + reply_length, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=True)
 
-        reply_text = tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
+        text = tokenizer.decode(reply[:, inputs.shape[-1]:][0], skip_special_tokens=True)
 
-        reply_text = f"{reply_text}\n\n{TICKERS}"
+        reply_text = text + '\n ' + TICKERS
 
         return reply_text
     
