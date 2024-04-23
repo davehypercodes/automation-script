@@ -95,7 +95,7 @@ class WhatsTweetBot:
             return parts[1]
         return None
 
-    def like_tweet(self, tweet_id):
+    def like_tweet(self, tweet_id, index):
         if self.has_been_liked(tweet_id):
             print("Tweet has already been liked!!")
             return
@@ -104,12 +104,12 @@ class WhatsTweetBot:
         with open('liked.txt', 'a') as file:
             file.write(tweet_id + '\n')
 
-    def retweet(self, tweet_id):
+    def retweet(self, tweet_id, index):
         if self.has_been_reposted(tweet_id):
             print("Tweet has already been reposted!!")
             return
         retweet_buttons = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@data-testid='retweet']")))
-        retweet_buttons[0].click()
+        retweet_buttons[index].click()
         retweet_confirm_button = WebDriverWait(self.driver, TIMEOUT).until(EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']")))
         retweet_confirm_button.click()
         with open('reposted.txt', 'a') as file:
@@ -154,7 +154,8 @@ class WhatsTweetBot:
         for tweet in tweets:
             if f"@{username}".lower() in tweet.text.lower():
                 tweet_text = tweet.text
-                return self.remove_lines(tweet_text)
+                index = tweets.index(tweet)
+                return self.remove_lines(tweet_text), index
 
     def engage_tweets(self):
         print("Engaging tweets...")
@@ -178,7 +179,7 @@ class WhatsTweetBot:
                 print("===============================================")
                 self.driver.get(link)
                 time.sleep(LONG_SLEEP_TIME)
-                tweet_text = self.get_tweet_text(target_username)
+                tweet_text, index = self.get_tweet_text(target_username)
 
                 commands = [self.like_tweet, self.retweet, self.comment]
                 random.shuffle(commands)
@@ -187,7 +188,7 @@ class WhatsTweetBot:
                     if command == self.comment:
                         command(tweet_text, tweet_id)
                     else:
-                        command(tweet_id)
+                        command(tweet_id, index)
                     time.sleep(SHORT_SLEEP_TIME)
 
                 self.mark_as_interacted_with(tweet_id)
