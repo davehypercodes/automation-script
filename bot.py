@@ -17,7 +17,7 @@ logging.set_verbosity_error()
 WHATSAPP_LINK = "https://web.whatsapp.com"
 PROFILE_PATH = "/home/dave/.mozilla/firefox/idltvjev.default-release-1712832970540"
 TWITTER_USERNAME = "adesanyadavidj"
-SESSION_LINK_COUNT = 21
+SESSION_LINK_COUNT = 32
 SLEEP_TIME = 10
 LONG_SLEEP_TIME = 15
 SHORT_SLEEP_TIME = 5
