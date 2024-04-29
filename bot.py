@@ -22,7 +22,7 @@ SLEEP_TIME = 10
 LONG_SLEEP_TIME = 15
 SHORT_SLEEP_TIME = 5
 TIMEOUT = 30
-TICKERS = "$BEYOND, $BUBBLE, $DROIDS, $PARAM"
+TICKERS = "$BEYOND"
 
 class WhatsTweetBot:
     def __init__(self):
